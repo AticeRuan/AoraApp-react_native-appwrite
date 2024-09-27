@@ -1,5 +1,5 @@
-import { View, FlatList, Image } from 'react-native'
-import React, { useState } from 'react'
+import { View, FlatList, Image, RefreshControl } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import EmptyState from '../../components/EmptyState'
@@ -16,7 +16,11 @@ import LoadingState from '../../components/LoadingState'
 const Profile = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext()
 
-  const { data: posts, isLoading } = useAppwrite(() => getUserPosts(user.$id))
+  const {
+    data: posts,
+    isLoading,
+    refetch,
+  } = useAppwrite(() => getUserPosts(user.$id))
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [loadingText, setLoadingText] = useState('Loading')
   const logout = async () => {
@@ -32,6 +36,13 @@ const Profile = () => {
     } finally {
       setIsLoggingOut(false)
     }
+  }
+
+  const [refreshing, setRefreshing] = useState(false)
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await refetch()
+    setRefreshing(false)
   }
 
   return (
@@ -92,6 +103,9 @@ const Profile = () => {
               subtitle="No videos found for the search query"
             />
           )}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </SafeAreaView>

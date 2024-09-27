@@ -1,9 +1,11 @@
-import { View, Text, Image, Pressable } from 'react-native'
+import { View, Text, Image, Pressable, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { icons } from '../constants'
 import { TouchableOpacity } from 'react-native'
 import { ResizeMode, Video } from 'expo-av'
 import { likePost } from '../lib/appwrite'
+import { usePathname } from 'expo-router'
+import { deletePost } from '../lib/appwrite'
 
 const VideoCard = ({
   video: {
@@ -29,18 +31,34 @@ const VideoCard = ({
     try {
       await likePost($id, userID)
       setLiked(!isLiked)
+      Alert.alert('Post liked successfully')
     } catch (error) {
       console.error('Error liking post:', error)
     } finally {
       setLoading(false)
     }
   }
+  const deleteOnePost = async () => {
+    setLoading(true)
+    try {
+      await deletePost($id)
+      Alert.alert('Post deleted successfully')
+    } catch (error) {
+      console.error('Error deleting post:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const pathName = usePathname()
+
+  const isProfile = pathName.startsWith('/profile')
 
   return (
     <View className="flex-col items-center px-4 mb-14 flex">
       <View className="flex-row gap-3 items-start">
         <View className="justify-center items-center flex-row flex-1">
-          <View className="w-[46px] h-[46px] rounded-lg border border-secondary justify-center items-center p-0.5">
+          <View className="w-[46px] h-[46px] rounded-lg border border-secondary justify-center items-center p-0.5 ">
             <Image
               source={{ uri: avatar }}
               resizeMode="contain"
@@ -63,13 +81,21 @@ const VideoCard = ({
           </View>
         </View>
         <View className="pt-2">
-          <Pressable onPress={likepost}>
-            <Image
-              source={icons.bookmark}
-              className="w-5 h-5"
-              resizeMode="contain"
-              tintColor={isLiked ? '#FF9C01' : ''}
-            />
+          <Pressable onPress={isProfile ? deleteOnePost : likepost} active>
+            {isProfile ? (
+              <View className="w-15 h-6 bg-secondary rounded-lg p-1 shadow-md ">
+                <Text className=" text-white text-center font-pmedium ">
+                  Delete
+                </Text>
+              </View>
+            ) : (
+              <Image
+                source={icons.bookmark}
+                className="w-5 h-5"
+                resizeMode="contain"
+                tintColor={isLiked ? '#FF9C01' : ''}
+              />
+            )}
           </Pressable>
         </View>
       </View>
